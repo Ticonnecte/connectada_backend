@@ -1,0 +1,40 @@
+﻿@using CidConnectada.Website.Code.Extensions
+@using Zenite.Pi.Web
+
+@*
+    Item1 = nome;
+    Item2 = classe da mensagem;
+    Item3 = font-size;
+    Item4 = message
+*@
+
+@model Tuple<string, string, string>
+
+<style>
+
+    .alert{
+        word-wrap: break-word;
+    }
+
+</style>
+
+@{
+    string classes = "msn";
+    if (Model.Item2 != "")
+    {
+        classes += " " + Model.Item2;
+    }
+
+    // nomes idênticos aos utilizados em pi.js - messagewrapper E messagewrapper...
+    string containerId = "messagesContainer" + Model.Item1;
+    string wrapperId = "messagewrapper" + Model.Item1;
+
+    string fontSize = Model.Item3 != "" ? "font-size: " + Model.Item3 + ";" : "";
+}
+
+<div class="row" id="@containerId" style="display: none;">
+    <div id="@wrapperId" class="@classes" style="@fontSize">
+        @Html.RenderMessages()
+    </div>
+</div>
+

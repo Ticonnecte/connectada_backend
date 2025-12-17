@@ -1,0 +1,949 @@
+﻿@section Scripts {
+    @Scripts.Render("~/bundles/jqueryui")
+    @Scripts.Render("~/bundles/pi")
+    @Scripts.Render("~/bundles/jquerymask")
+
+    <script type="text/javascript">
+
+        var tokenKey = 'accessToken';
+
+        $(document).ready(function () {
+            
+        });
+
+        function GetEmpty() {
+            var token = sessionStorage.getItem(tokenKey);
+            var headers = {};
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+        }
+
+        function getData(uri, useImei, useDataRef, trackerChippedId, hasGetAddress) {
+            showCover('cover-transactions', 'Buscando dados...' + uri);
+            var messageHandle = new CustomMessageApp('msg-transactions');
+            messageHandle.clear();
+
+
+            debugger;
+            var isPeriod = $('#data-final').val() != undefined && $('#data-final').val() != '';
+
+            var uriFinal = uri;
+            var separator = uri.indexOf('?') > 0 ? '&' : '?';
+            if (useImei || useDataRef) {
+                if (useImei && useDataRef) {
+                    if (isPeriod) {
+                        uriFinal += separator + 'imei={0}&dtIni={1}&dtFinal={2}'.format($('#imei').val(), $('#data-ini').val(), $('#data-final').val());
+                    }
+                    else {
+                        uriFinal += separator + 'imei={0}&dataRef={1}'.format($('#imei').val(), $('#data-ini').val());
+                    }
+                }
+                else if (useImei) {
+                    uriFinal += separator + 'imei={0}'.format($('#imei').val());
+                }
+                else {
+                    if (isPeriod) {
+                        uriFinal += separator + 'dtIni={0}&dtFinal={1}'.format($('#data-ini').val(), $('#data-final').val());
+                    }
+                    else {
+                        uriFinal += separator + 'dataRef={0}'.format($('#data-ini').val());
+                    }
+                }
+                if (trackerChippedId != undefined) {
+                    uriFinal += '&tkrChipped={0}'.format(trackerChippedId);
+                }
+            }
+            if (hasGetAddress) {
+                uriFinal += '&getAddress=true';
+            }
+
+            var token = sessionStorage.getItem(tokenKey);
+            var headers = {};
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+
+            debugger;
+
+            $.ajax({
+                type: 'GET',
+                url: uriFinal,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                headers: headers
+            }).done(function (data, textStatus, jqXHR) {
+                if (data) {
+                    messageHandle.displayMessage(JSON.stringify(data), 'success', -1);
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                debugger;
+                messageHandle.displayMessage('Erro {0}. Details: {1}.'.format(jqXHR.status, jqXHR.responseText), 'danger', -1);
+            }).always(function () {
+                $('#cover-transactions').fadeOut(300);
+            });
+        }
+
+        function getOneRota() {
+            getOneData("rota", "CRUD");
+        }
+
+        function updateMensagem() {
+            var messageHandle = new CustomMessageApp('msg-Financeiro');
+            messageHandle.clear();
+
+            var token = sessionStorage.getItem(tokenKey);
+            var headers = {};
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+
+            var data = {};
+
+            data["Key"] = $('#mensagem-key').val();
+            data["Assunto"] = $('#mensagem-assunto').val();
+            data["Mensagem"] = $('#mensagem-texto').val();
+
+            var url = '/api/empresa/UpdateMensagem';
+            debugger;
+            $.ajax({
+                type: 'PUT',
+                url: url,
+                dataType: "json",
+                data: JSON.stringify(data),
+                headers: headers,
+                contentType: 'application/json; charset=utf-8',
+                headers: headers
+            }).done(function (data, textStatus, jqXHR) {
+                debugger;
+                if (data) {
+                    messageHandle.displayMessage(JSON.stringify(data), 'success', -1);
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                debugger;
+                messageHandle.displayMessage('Erro {0}. Details: {1}.'.format(jqXHR.status, jqXHR.responseText), 'danger', -1);
+            });
+
+        }
+
+        function setClaims() {
+            var messageHandle = new CustomMessageApp('msg-Cadastros');
+            messageHandle.clear();
+            var token = sessionStorage.getItem(tokenKey);
+            var headers = {};
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+
+            var url = '/api/account/SetClaims';
+
+            var data = {}
+
+            data["Email"] = $("#claim-email").val();
+            data["ClienteKey"] = $("#claim-ck").val();
+            data["Perfil"] = $("#claim-perfil").val();
+
+            $.ajax({
+                type: 'POST',
+                url: url,
+                dataType: "json",
+                data: JSON.stringify(data),
+                headers: headers,
+                contentType: 'application/json; charset=utf-8',
+                headers: headers
+            }).done(function (data, textStatus, jqXHR) {
+                debugger;
+                if (data) {
+                    messageHandle.displayMessage(JSON.stringify(data), 'success', -1);
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                debugger;
+                messageHandle.displayMessage('Erro {0}. Details: {1}.'.format(jqXHR.status, jqXHR.responseText), 'danger', -1);
+            });
+        }
+
+        function updateData(entidade, data, tabName) {
+            var messageHandle = new CustomMessageApp('msg-' + tabName);
+            messageHandle.clear();
+            var token = sessionStorage.getItem(tokenKey);
+            var headers = {};
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+
+            var url = '/api/{0}/put'.format(entidade);
+            debugger;
+            $.ajax({
+                type: 'PUT',
+                url: url,
+                dataType: "json",
+                data: JSON.stringify(data),
+                headers: headers,
+                contentType: 'application/json; charset=utf-8',
+                headers: headers
+            }).done(function (data, textStatus, jqXHR) {
+                debugger;
+                if (data) {
+                    messageHandle.displayMessage(JSON.stringify(data), 'success', -1);
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                debugger;
+                messageHandle.displayMessage('Erro {0}. Details: {1}.'.format(jqXHR.status, jqXHR.responseText), 'danger', -1);
+            });
+        }
+
+        function insertData(entidade, data, tabName) {
+            var messageHandle = new CustomMessageApp('msg-' + tabName);
+            messageHandle.clear();
+            var token = sessionStorage.getItem(tokenKey);
+            var headers = {};
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+
+            var url = '/api/{0}/post'.format(entidade);
+            debugger;
+            $.ajax({
+                type: 'POST',
+                url: url,
+                dataType: "json",
+                data: JSON.stringify(data),
+                headers: headers,
+                contentType: 'application/json; charset=utf-8',
+                headers: headers
+            }).done(function (data, textStatus, jqXHR) {
+                debugger;
+                if (data) {
+                    messageHandle.displayMessage(JSON.stringify(data), 'success', -1);
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                debugger;
+                messageHandle.displayMessage('Erro {0}. Details: {1}.'.format(jqXHR.status, jqXHR.responseText), 'danger', -1);
+            });
+        }
+
+        function getAllMensagens() {
+            var messageHandle = new CustomMessageApp('msg-Financeiro');
+            messageHandle.clear();
+
+            var token = sessionStorage.getItem(tokenKey);
+            var headers = {};
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+
+            var url = '/api/empresa/GetAllMensagens';
+
+            $.ajax({
+                type: 'GET',
+                url: url,
+                dataType: "json",
+                headers: headers,
+                contentType: 'application/json; charset=utf-8'
+            }).done(function (data, textStatus, jqXHR) {
+                debugger;
+                if (data) {
+                    messageHandle.displayMessage(JSON.stringify(data), 'success', -1);
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                debugger;
+                messageHandle.displayMessage('Erro {0}. Details: {1}.'.format(jqXHR.status, jqXHR.responseText), 'danger', -1);
+            })
+        }
+
+        function getAllUsers() {
+            var messageHandle = new CustomMessageApp('msg-Cadastros');
+            messageHandle.clear();
+
+            var token = sessionStorage.getItem(tokenKey);
+            var headers = {};
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+            debugger;
+            var url = '/api/account/getallusers';
+
+            $.ajax({
+                type: 'GET',
+                url: url,
+                dataType: "json",
+                headers: headers,
+                contentType: 'application/json; charset=utf-8'
+            }).done(function (data, textStatus, jqXHR) {
+                debugger;
+                if (data) {
+                    messageHandle.displayMessage(JSON.stringify(data), 'success', -1);
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                debugger;
+                messageHandle.displayMessage('Erro {0}. Details: {1}.'.format(jqXHR.status, jqXHR.responseText), 'danger', -1);
+            })
+        }
+
+        function getOneUser() {
+            var messageHandle = new CustomMessageApp('msg-Cadastros');
+            messageHandle.clear();
+
+            var token = sessionStorage.getItem(tokenKey);
+            var headers = {};
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+            debugger;
+            var url = '/api/account/getoneuser?id=' + $('#user-key').val();
+
+            $.ajax({
+                type: 'GET',
+                url: url,
+                dataType: "json",
+                headers: headers,
+                contentType: 'application/json; charset=utf-8'
+            }).done(function (data, textStatus, jqXHR) {
+                debugger;
+                if (data) {
+                    messageHandle.displayMessage(JSON.stringify(data), 'success', -1);
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                debugger;
+                messageHandle.displayMessage('Erro {0}. Details: {1}.'.format(jqXHR.status, jqXHR.responseText), 'danger', -1);
+            })
+        }
+
+        function deleteUser() {
+            deleteData("account", $('#user-key').val(), "Cadastros")
+        }
+
+        function deletePerfil() {
+            deleteData("perfil", $('#perfil-key').val(), "Cadastros");
+        }
+
+        function getRoles() {
+            var token = sessionStorage.getItem(tokenKey);
+            var headers = {};
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+
+            var uriFinal = "/api/account/getroles"
+
+            $.ajax({
+                type: 'GET',
+                url: uriFinal,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                headers: headers
+            })
+        }
+
+        function deleteData(entity, key, tabName) {
+            var messageHandle = new CustomMessageApp('msg-' + tabName);
+            messageHandle.clear();
+            var token = sessionStorage.getItem(tokenKey);
+            var headers = {};
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+            debugger;
+            var url = '/api/{0}/delete?id={1}'.format(entity, key);
+            debugger;
+            $.ajax({
+                type: 'DELETE',
+                url: url,
+                dataType: "json",
+                headers: headers,
+                contentType: 'application/json; charset=utf-8',
+                headers: headers
+            }).done(function (data, textStatus, jqXHR) {
+                debugger;
+                if (data) {
+                    messageHandle.displayMessage(JSON.stringify(data), 'success', -1);
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                debugger;
+                messageHandle.displayMessage('Erro {0}. Details: {1}.'.format(jqXHR.status, jqXHR.responseText), 'danger', -1);
+            });
+        }
+
+        function addFuncionalidade() {
+            var newData = {};
+
+            newData["FuncionalidadeNome"] = $('#func-nome').val();
+            newData["FuncionalidadeMenu"] = $('#func-menu').val();
+            newData["FuncionalidadeEndPoint"] = $('#func-endpoint').val();
+
+            var token = sessionStorage.getItem(tokenKey);
+            var headers = {};
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+            var messageHandle = new CustomMessageApp('msg-Cadastros');
+            messageHandle.clear();
+
+            var url = "/api/perfil/addfuncionalidade";
+
+            $.ajax({
+                type: 'POST',
+                url: url,
+                dataType: "json",
+                data: JSON.stringify(newData),
+                headers: headers,
+                contentType: 'application/json; charset=utf-8',
+                headers: headers
+            }).done(function (data, textStatus, jqXHR) {
+                debugger;
+                if (data) {
+                    messageHandle.displayMessage(JSON.stringify(data), 'success', -1);
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                debugger;
+                messageHandle.displayMessage('Erro {0}. Details: {1}.'.format(jqXHR.status, jqXHR.responseText), 'danger', -1);
+            });
+        }
+
+        function addPerfil() {
+            insertData("perfil", PerfilModel(), "Cadastros");
+        }
+
+        function getUserData() {
+            var messageHandle = new CustomMessageApp('msg-invoke-security-api');
+            messageHandle.clear();
+
+            var token = sessionStorage.getItem(tokenKey);
+            var headers = {};
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+
+            $.ajax({
+                type: 'GET',
+                url: '/api/account/getuserdata',
+                headers: headers
+            }).done(function (data) {
+                messageHandle.displayMessage('User name: {0}, User id: {1}, Role: {2}'.format(data.UserName, data.UserId, data.UserRole), 'success', -1);
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                messageHandle.displayMessage('Erro {0}. Details: {1}.'.format(jqXHR.status, jqXHR.responseText), 'danger', -1);
+            });
+        }
+
+        function getTenantData() {
+            var messageHandle = new CustomMessageApp('msg-invoke-security-api');
+            messageHandle.clear();
+
+            var urlFinal = '/api/empresa/gettenantdata?dominio=' + $('#tenant-name').val();
+
+            $.ajax({
+                type: 'GET',
+                url: urlFinal,
+
+            }).done(function (data) {
+                messageHandle.displayMessage(JSON.stringify(data), 'success', -1);
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                messageHandle.displayMessage('Erro {0}. Details: {1}.'.format(jqXHR.status, jqXHR.responseText), 'danger', -1);
+            });
+        }
+
+        function resetMaster() {
+            var messageHandle = new CustomMessageApp('msg-invoke-security-api');
+            messageHandle.clear();
+
+            var urlFinal = '/api/account/ResetMasterPassword?dominio=' + $('#tenant-name').val();
+
+            $.ajax({
+                type: 'PUT',
+                url: urlFinal,
+
+            }).done(function (data) {
+                messageHandle.displayMessage(JSON.stringify(data), 'success', -1);
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                messageHandle.displayMessage('Erro {0}. Details: {1}.'.format(jqXHR.status, jqXHR.responseText), 'danger', -1);
+            });
+        }
+
+        function PerfilModel() {
+            var data = {};
+
+            data["Key"] = $('#perfil-key').val();
+            data["Nome"] = $('#perfil-nome').val();
+            data["Role"] = $('#perfil-role option:selected').val();
+            data["MinimumRole"] = $('#perfil-role option:selected').text();
+            data["ClienteKey"] = $('#perfil-cliente option:selected').val();
+            data["FuncionalidadePerfilModelSet"] = []
+            debugger;
+
+            if ($('#perfil-Sumário').is(':checked') == true) {
+                data["FuncionalidadePerfilModelSet"].push({ IdFuncionalidade: 1 });
+            }
+            return data;
+        }
+
+
+        function crypto(option) {
+            var messageHandle = new CustomMessageApp('msg-Financeiro');
+            messageHandle.clear();
+
+            var token = sessionStorage.getItem(tokenKey);
+            var headers = {};
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+
+            var url = '/api/cliente/{0}?texto=' + $('#cryptotxt').val();
+
+            if (option == 1) {
+                url = url.format('TestEncrypt');
+            } else {
+                url = url.format('TestDecrypt');
+            }
+
+            $.ajax({
+                type: 'GET',
+                url: url,
+                dataType: "json",
+                headers: headers,
+                contentType: 'application/json; charset=utf-8'
+            }).done(function (data, textStatus, jqXHR) {
+                debugger;
+                if (data) {
+                    messageHandle.displayMessage(JSON.stringify(data), 'success', -1);
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                debugger;
+                messageHandle.displayMessage('Erro {0}. Details: {1}.'.format(jqXHR.status, jqXHR.responseText), 'danger', -1);
+            })
+        }
+    </script>
+}
+
+<style>
+    #mapid {
+        height: 380px;
+    }
+
+    /* Customize the label (the container) */
+    .container_radio {
+        display: block;
+        position: relative;
+        padding-left: 35px;
+        margin-bottom: 0px;
+        margin-top: 5px;
+        cursor: pointer;
+        font-size: 15px;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+        /* Hide the browser's default checkbox */
+        .container_radio input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+    /* Create a custom checkbox */
+    .checkmark_radio {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 25px;
+        width: 25px;
+        background-color: #eee;
+    }
+
+    /* On mouse-over, add a grey background color */
+    .container_radio:hover input ~ .checkmark_radio {
+        background-color: #ccc;
+    }
+
+    /* When the checkbox is checked, add a blue background */
+    .container_radio input:checked ~ .checkmark_radio {
+        background-color: #2196F3;
+    }
+
+    /* Create the checkmark/indicator (hidden when not checked) */
+    .checkmark_radio:after {
+        content: "";
+        position: absolute;
+        display: none;
+    }
+
+    /* Show the checkmark when checked */
+    .container_radio input:checked ~ .checkmark_radio:after {
+        display: block;
+    }
+
+    /* Style the checkmark/indicator */
+    .container_radio .checkmark_radio:after {
+        left: 9px;
+        top: 5px;
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 3px 3px 0;
+        -webkit-transform: rotate(45deg);
+        -ms-transform: rotate(45deg);
+        transform: rotate(45deg);
+    }
+
+    .dia.active /*, .dia1.active, .dia2.active, .dia3.active, .dia4.active, .dia5.active, .dia6.active*/ {
+        background-color: #2196F3;
+        border-radius: 5px;
+        color: #FFF;
+    }
+
+    .dia /*0, .dia1, .dia2, .dia3, .dia4, .dia5, .dia6*/ {
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        margin-right: 1px;
+        margin-top: 2px;
+        display: inline-block;
+        font-weight: 700;
+        color: #000000;
+        text-align: center;
+        font-size: 14px;
+        background-color: #FFF;
+        cursor: pointer;
+    }
+</style>
+
+<div class="box">
+    <header class="box-header">
+        <h2>&nbsp;</h2>
+    </header>
+    <div class="box-content">
+        <ul class="nav tab-menu left nav-tabs" role="tablist" id="sistemaTab">
+            <li class="active"><a href="\#tabSecurity" role="tab" data-toggle="tab">Security</a></li>
+            <li><a href="\#tabAccount" role="tab" data-toggle="tab">Account</a></li>
+            <li><a href="\#tabCadastros" role="tab" data-toggle="tab">Cadastros</a></li>
+        </ul>
+        <div class="tab-content">
+            <br />
+            <div class="tab-pane active" id="tabSecurity">
+                <div class="row">
+                    @Html.Partial("_Message", new Tuple<string, string, string>("msg-security", "", "small"))
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <form data-bind="submit: callApi">
+                            <h3>Invoke Security API</h3>
+                            <div class="form-group">
+                                <label>User</label>
+                                <input id="user_logged_in" class="form-control" type="text" readonly data-bind="value: user" />
+                            </div>
+                            <div class="form-group">
+                                <label>Result</label>
+                                <input class="form-control" type="text" readonly data-bind="value: result" />
+                            </div>
+                            <div class="form-group error-messages" data-bind="foreach: errors">
+                                <p data-bind="text: $data" />
+                            </div>
+                        </form>
+                        <button onclick="javascript:getUserData()">
+                            Get User Data
+                        </button>
+                        @Html.Partial("_Message", new Tuple<string, string, string>("msg-invoke-security-api", "", "small"))
+                        <br />
+                        <label>Tenant</label>
+                        <input class="form-control" type="text" id="tenant-name" data-bind="value: tenant" />
+                        <button onclick="javascript:getTenantData()">
+                            Get Tenant Data
+                        </button>
+                        <button onclick="javascript: resetMaster()">
+                            Reset Master
+                        </button>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <div>
+                            <h3 id="tenant-name-h3"></h3>
+                        </div>
+                        <div>
+                            <img id="tenant-logo" />
+                        </div>
+                        <div>
+                            <h4 id="store-list"></h4>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <h3>Log In</h3>
+                        <form data-bind="submit: login">
+                            <div class="form-group">
+                                <label>UserName</label>
+                                <input class="form-control" type="text" data-bind="value: loginUsername" />
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input class="form-control" type="password" data-bind="value: loginPassword" />
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-default">Log In</button>
+                                <button data-bind="click: logout" class="btn btn-default">Log Out</button>
+                            </div>
+                        </form>
+                        <br />
+
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane" id="tabAccount">
+                <div class="row">
+                    @Html.Partial("_Message", new Tuple<string, string, string>("msg-account", "", "small"))
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <form data-bind="submit: updateInfo">
+                            <h3>Change Account Info</h3>
+                            <div class="form-group">
+                                <label>New Email</label>
+                                <input class="form-control" type="text" data-bind="value: newEmail" placeholder="email@domain" />
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-default">Salvar</button>
+                            </div>
+                        </form>
+
+                        @Html.Partial("_Message", new Tuple<string, string, string>("msg-invoke-security-api", "", "small"))
+                    </div>
+                    <div class="col-sm-4">
+                        <form data-bind="submit: updatePass">
+                            <h3>Change Password</h3>
+                            <div class="form-group">
+                                <label>Old Password</label>
+                                <input class="form-control" type="password" data-bind="value: oldPassword" />
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input class="form-control" type="password" data-bind="value: newPassword" />
+                            </div>
+                            <div class="form-group">
+                                <label>Confirm Password</label>
+                                <input class="form-control" type="password" data-bind="value: newPassword2" />
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-default">Salvar</button>
+                            </div>
+                        </form>
+
+                        @Html.Partial("_Message", new Tuple<string, string, string>("msg-invoke-security-api", "", "small"))
+                    </div>
+                    <div class="col-sm-4">
+                        <form data-bind="submit: resetPass">
+                            <h3>Reset Password</h3>
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input class="form-control" type="text" data-bind="value: resetUsername" />
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-default">Reset</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div id="tabCadastros" class="tab-pane">
+                <div class="row">
+                    @Html.Partial("_Message", new Tuple<string, string, string>("msg-Cadastros", "", "small"))
+                </div>
+                <div class="box-content">
+                    <ul class="nav tab-menu left nav-tabs" role="tablist" id="cadastroTab">
+                        <li class="active"><a href="\#tabUser" role="tab" data-toggle="tab">User</a></li>
+                        <li><a href="\#tabPerfil" role="tab" data-toggle="tab">Perfil</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="tabUser" class="tab-pane active">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <form data-bind="submit: register">
+                                        <h3>Register</h3>
+
+                                        <label class="col-md-12" style="padding:initial">Role</label>
+                                        <div class="form-group col-md-8" style="padding:initial">
+                                            <select id="user-role" class="form-control " data-bind="value: role, options: rolesOptions, optionsText: 'RoleName', optionsValue: 'RoleName'"></select>
+                                        </div>
+                                        <div class="form-group col-md-4" style="padding:initial">
+                                            <button data-bind="click: getRegisterOptions.bind($data, 1)" class="btn btn-default">Get Roles</button>
+                                        </div>
+
+                                        <label class="col-md-12" style="padding:initial">Cliente</label>
+                                        <div class="form-group col-md-8" style="padding:initial">
+                                            <select id="user-cliente" class="form-control" data-bind="value: cliente, options: clienteOptions, optionsText: 'name', optionsValue: 'id'"></select>
+                                        </div>
+                                        <div class="form-group col-md-4" style="padding:initial">
+                                            <button data-bind="click: getRegisterOptions.bind($data, 2)" class="btn btn-default" id="getClientesButton" style="visibility:hidden">Get Clientes</button>
+                                        </div>
+
+                                        <div class="form-group col-md-4" style="padding:initial">
+                                            <button data-bind="click: getRegisterOptions.bind($data, 3, role(), cliente())" class="btn btn-default" id="getProfilesButton" style="visibility:hidden">Get Profiles</button>
+                                        </div>
+
+
+                                        <div class="form-group col-md-12" style="padding:initial">
+                                            <label>Name</label>
+                                            <input class="form-control" type="text" data-bind="value: name" />
+                                        </div>
+                                        <div class="form-group col-md-12" style="padding:initial">
+                                            <label>UserName</label>
+                                            <input class="form-control" type="text" data-bind="value: userName" />
+                                        </div>
+                                        <div class="form-group col-md-12" style="padding:initial">
+                                            <label>Email</label>
+                                            <input class="form-control" type="text" data-bind="value: registerEmail" />
+                                        </div>
+                                        <div class="form-group col-md-12" style="padding:initial">
+                                            <label>Password</label>
+                                            <input class="form-control" type="password" data-bind="value: registerPassword" />
+                                            <span>P.A., a0 = 1, r = 1, n = 5</span>
+                                        </div>
+                                        <div class="form-group col-md-12" style="padding:initial">
+                                            <label>Confirm Password</label>
+                                            <input class="form-control" type="password" data-bind="value: registerPassword2" />
+                                        </div>
+                                        @*<div class="form-group col-md-12" style="padding:initial">
+                                                <label>Veiculos</label>
+                                                <input class="form-control" data-bind="value: veiculoKey" />
+
+                                            </div>*@
+
+                                        <div class="form-group col-md-12" style="padding:initial">
+                                            <button type="submit" class="btn btn-default">Register</button>
+
+                                        </div>
+                                    </form>
+                                    <div class="col-md-12" style="padding:initial">
+                                        <button onclick="javascript: getAllUsers()" class="btn btn-default">Get Users</button>
+                                        @*<button onclick="javascript: getVeiculos()">GetVeiculos</button>*@
+                                    </div>
+
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <h3><br /></h3>
+                                    <label>Key</label>
+                                    <input class="form-control" type="text" id="user-key" data-bind="value: userKey" />
+                                    <button onclick="javascript: alterarStatusUser(1)">Bloq/Desbloq</button>
+                                    <button onclick="javascript: alterarStatusUser(2)">Arquivar</button>
+                                    <button onclick="javascript: getOneUser()">Get One</button>
+                                    <button data-bind="click: function() {update()}">Update</button>
+                                    <button onclick="javascript: deleteUser()">Delete</button>
+                                </div>
+
+                                @*<div class="col-sm-4">
+                                        <h3>Temp Set Claims</h3>
+
+                                        <label>Email</label>
+                                        <input class="form-control" type="text" id="claim-email" />
+                                        <label>ClienteKey</label>
+                                        <input class="form-control" type="text" id="claim-ck" />
+                                        <label>Nome Perfil</label>
+                                        <input class="form-control" type="text" id="claim-perfil" />
+                                        <button onclick="javascript: setClaims()">Set Claims</button>
+                                    </div>*@
+                            </div>
+                        </div>
+                        <div id="tabPerfil" class="tab-pane">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <h3>Cadastrar</h3>
+
+                                    <div id="funcionalidades" style="visibility:hidden">
+                                        <label>Funcionalidades</label>
+                                        <div id="menu-geral" style="background-color:#d0def4">
+
+                                        </div>
+                                        <div style="background-color:#d0def4">
+                                            <br />
+                                        </div>
+
+                                        <div id="menu-perimetria">
+
+                                        </div>
+                                        <br />
+                                        <div id="menu-telemetria" style="background-color:#d0def4">
+
+                                        </div>
+                                        <div style="background-color:#d0def4">
+                                            <br />
+                                        </div>
+
+                                        <div id="menu-relatorios">
+
+                                        </div>
+                                        <br />
+                                        <div id="menu-financeiro" style="background-color:#d0def4">
+
+                                        </div>
+                                        <div style="background-color:#d0def4">
+                                            <br />
+                                        </div>
+                                        <div id="menu-gestao">
+
+                                        </div>
+                                        <br />
+                                        <div id="menu-cadastros" style="background-color:#d0def4">
+
+                                        </div>
+                                        <div style="background-color:#d0def4">
+                                            <br />
+                                        </div>
+                                    </div>
+                                    <button id="funcsButton" onclick="javascript: loadFuncionalidades()">GetFuncionalidades</button>
+                                </div>
+                                <div class="col-sm-4">
+                                    <h3>Perfil</h3>
+                                    <label>Nome</label>
+                                    <input class="form-control" type="text" id="perfil-nome" />
+
+                                    <label class="col-md-12" style="padding:initial">Role</label>
+                                    <div class="form-group col-md-8" style="padding:initial">
+                                        <select id="perfil-role" class="form-control " data-bind="options: rolesOptions, optionsText: 'name', optionsValue: 'id'"></select>
+                                    </div>
+                                    <div class="form-group col-md-4" style="padding:initial">
+                                        <button data-bind="click: getRegisterOptions.bind($data, 1)" class="btn btn-default">Get Roles</button>
+                                    </div>
+
+                                    <label class="col-md-12" style="padding:initial">Cliente</label>
+                                    <div class="form-group col-md-8" style="padding:initial">
+                                        <select id="perfil-cliente" class="form-control" data-bind="options: clienteOptions, optionsText: 'name', optionsValue: 'id'"></select>
+                                    </div>
+                                    <div class="form-group col-md-4" style="padding:initial">
+                                        <button data-bind="click: getRegisterOptions.bind($data, 2)" class="btn btn-default" id="getClientesButton2" style="visibility:hidden">Get Clientes</button>
+                                    </div>
+
+                                    <button onclick="javascript: addPerfil()">Add Perfil</button>
+                                    <button onclick="javascript: getAllPerfis()">Get Perfis</button>
+                                    <br />
+
+                                    <h3>Funcionalidade</h3>
+
+                                    <label>Nome</label>
+                                    <input class="form-control" type="text" id="func-nome" />
+
+                                    <label>Menu</label>
+                                    <input class="form-control" type="text" id="func-menu" />
+
+                                    <label>Endpoint</label>
+                                    <input class="form-control" type="text" id="func-endpoint" placeholder="Ex: '/index','/localizacao'..." />
+
+                                    <button onclick="javascript: addFuncionalidade()">Add Funcionalidade</button>
+
+                                </div>
+                                <div class="col-sm-4">
+                                    <h3>Update/Delete/GetOne</h3>
+                                    <label>Key</label>
+                                    <input class="form-control" type="text" id="perfil-key" />
+                                    <button onclick="javascript: getOnePerfil()">GetOne Perfil</button>
+                                    <button onclick="javascript: updatePerfil()">Update Perfil</button>
+                                    <button onclick="javascript: deletePerfil()">Delete Perfil</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
